@@ -1,6 +1,6 @@
 # cookiejar
 --
-    import "github.com/juju/persistent-cookiejar"
+    import "github.com/chyroc/persistent-cookiejar"
 
 Package cookiejar implements an in-memory RFC 6265-compliant http.CookieJar.
 
