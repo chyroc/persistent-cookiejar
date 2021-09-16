@@ -6,15 +6,15 @@ package cookiejar
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"sort"
 	"time"
+
 	"github.com/chyroc/persistent-cookiejar/internal/filelock"
-	"gopkg.in/retry.v1"
-	"gopkg.in/errgo.v1"
 )
 
 // Save saves the cookies to the persistent cookie file.
@@ -41,12 +41,12 @@ func (j *Jar) MarshalJSON() ([]byte, error) {
 func (j *Jar) save(now time.Time) error {
 	locked, err := lockFile(lockFileName(j.filename))
 	if err != nil {
-		return errgo.Mask(err)
+		return err
 	}
 	defer locked.Close()
 	f, err := os.OpenFile(j.filename, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
-		return errgo.Mask(err)
+		return err
 	}
 	defer f.Close()
 	// TODO optimization: if the file hasn't changed since we
@@ -60,10 +60,10 @@ func (j *Jar) save(now time.Time) error {
 	}
 	j.deleteExpired(now)
 	if err := f.Truncate(0); err != nil {
-		return errgo.Notef(err, "cannot truncate file")
+		return fmt.Errorf("cannot truncate file: %w", err)
 	}
 	if _, err := f.Seek(0, 0); err != nil {
-		return errgo.Mask(err)
+		return err
 	}
 	return j.writeTo(f)
 }
@@ -79,7 +79,7 @@ func (j *Jar) load() error {
 	}
 	locked, err := lockFile(lockFileName(j.filename))
 	if err != nil {
-		return errgo.Mask(err)
+		return err
 	}
 	defer locked.Close()
 	f, err := os.Open(j.filename)
@@ -91,7 +91,7 @@ func (j *Jar) load() error {
 	}
 	defer f.Close()
 	if err := j.mergeFrom(f); err != nil {
-		return errgo.Mask(err)
+		return err
 	}
 	return nil
 }
@@ -150,21 +150,49 @@ func lockFileName(path string) string {
 	return path + ".lock"
 }
 
-var attempt = retry.LimitTime(3*time.Second, retry.Exponential{
-	Initial:  100 * time.Microsecond,
-	Factor:   1.5,
-	MaxDelay: 100 * time.Millisecond,
-})
-
-func lockFile(path string) (io.Closer, error) {
-	for a := retry.Start(attempt, nil); a.Next(); {
+func lockFile(path string) (res io.Closer, err error) {
+	err = retryDo(func() error {
 		locker, err := filelock.Lock(path)
 		if err == nil {
-			return locker, nil
+			res = locker
+			return nil
 		}
-		if !a.More() {
-			return nil, errgo.Notef(err, "file locked for too long; giving up")
+		return err
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func retryDo(do func() error) error {
+	limit := time.Second * 3
+	initial := 100 * time.Microsecond
+	factor := 1.5
+	maxDelay := 100 * time.Millisecond
+	var err error
+
+	start := time.Now()
+	shouldEnd := func() bool {
+		return time.Now().Sub(start) >= limit
+	}
+
+	for {
+		if shouldEnd() {
+			if err != nil {
+				return fmt.Errorf("file locked for too long err; giving up: %w", err)
+			} else {
+				return fmt.Errorf("file locked for too long err; giving up")
+			}
+		}
+		if err = do(); err == nil {
+			return nil
+		} else {
+			time.Sleep(initial)
+			initial = time.Duration(float64(initial) * factor)
+			if initial > maxDelay {
+				initial = maxDelay
+			}
 		}
 	}
-	panic("unreachable")
 }
