@@ -12,10 +12,8 @@ import (
 	"path/filepath"
 	"sort"
 	"time"
-
+	"github.com/chyroc/persistent-cookiejar/internal/filelock"
 	"gopkg.in/retry.v1"
-
-	filelock "github.com/juju/go4/lock"
 	"gopkg.in/errgo.v1"
 )
 

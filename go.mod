@@ -3,10 +3,16 @@ module github.com/chyroc/persistent-cookiejar
 go 1.17
 
 require (
-	github.com/frankban/quicktest v0.0.0-20171023143956-9332c2fb618e
-	github.com/google/go-cmp v0.1.1-0.20171005193144-7ffe1921f7d7
-	github.com/juju/go4 v0.0.0-20160222163258-40d72ab9641a
-	golang.org/x/net v0.0.0-20160217011348-b6d7b1396ec8
-	gopkg.in/errgo.v1 v1.0.0-20151007153157-66cb46252b94
-	gopkg.in/retry.v1 v1.0.0-20161025181430-c09f6b86ba4d
+	github.com/frankban/quicktest v1.13.1
+	golang.org/x/net v0.0.0-20210916014120-12bc252f5db8
+	gopkg.in/errgo.v1 v1.0.1
+	gopkg.in/retry.v1 v1.0.3
+)
+
+require (
+	github.com/google/go-cmp v0.5.6 // indirect
+	github.com/kr/pretty v0.3.0 // indirect
+	github.com/kr/text v0.2.0 // indirect
+	github.com/rogpeppe/go-internal v1.6.1 // indirect
+	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543 // indirect
 )
