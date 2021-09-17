@@ -44,7 +44,7 @@ func (j *Jar) save(now time.Time) error {
 		return err
 	}
 	defer locked.Close()
-	f, err := os.OpenFile(j.filename, os.O_RDWR|os.O_CREATE, 0600)
+	f, err := os.OpenFile(j.filename, os.O_RDWR|os.O_CREATE, 0o600)
 	if err != nil {
 		return err
 	}
