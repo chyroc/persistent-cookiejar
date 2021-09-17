@@ -80,6 +80,8 @@ type Options struct {
 	// Filename holds the file to use for storage of the cookies.
 	// If it is empty, the value of DefaultCookieFile will be used.
 	Filename string
+
+	Persistent bool // chyroc modify, handle maxAge and expired not set cookie
 }
 ```
 
