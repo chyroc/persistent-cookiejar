@@ -71,6 +71,8 @@ type Options struct {
 	// (useful for tests). If this is true, the value of Filename will be
 	// ignored.
 	NoPersist bool
+
+	Persistent bool // chyroc modify, handle maxAge and expired not set cookie
 }
 
 // Jar implements the http.CookieJar interface from the net/http package.
@@ -86,6 +88,8 @@ type Jar struct {
 	// entries is a set of entries, keyed by their eTLD+1 and subkeyed by
 	// their name/domain/path.
 	entries map[string]map[string]entry
+
+	persistent bool // chyroc modify, handle maxAge and expired not set cookie
 }
 
 var noOptions Options
@@ -107,6 +111,9 @@ func newAtTime(o *Options, now time.Time) (*Jar, error) {
 	if o == nil {
 		o = &noOptions
 	}
+
+	jar.persistent = o.Persistent // chyroc modify
+
 	if jar.psList = o.PublicSuffixList; jar.psList == nil {
 		jar.psList = publicsuffix.List
 	}
